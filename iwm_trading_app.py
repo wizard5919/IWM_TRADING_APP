@@ -23,7 +23,8 @@ if page == "📅 Today's Plan":
     st.write(f"**Starting Balance:** ${day_plan['Starting Balance']:.2f}")
     st.write(f"**Market Condition:** {day_plan['Market Condition']}")
     st.write(f"**Direction:** {day_plan['Direction']}")
-    st.write(f"**Contracts:** {eval(day_plan['Contracts'])}")
+    # Remove eval() and just show contracts as string
+    st.write(f"**Contracts:** {day_plan['Contracts']}")  
     st.write(f"**Key Levels:** {day_plan['Key Levels']}")
     st.write(f"**Entry Condition:** {day_plan['Entry Condition']}")
     st.write(f"**Exit Condition:** {day_plan['Exit Condition']}")
