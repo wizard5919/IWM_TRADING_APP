@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -27,7 +26,7 @@ class IWMTradingPlan:
         current_balance = self.start_balance
 
         for i, date in enumerate(trading_days):
-            contracts = f"max(1, int({current_balance} * 0.1 / 10))"
+            contracts = max(1, int(current_balance * 0.1 / 10))
             condition = "Bullish" if levels['prev_close'] > levels['50ma'] else "Bearish"
 
             if condition == "Bullish":
@@ -45,8 +44,6 @@ class IWMTradingPlan:
                 f"Pivot: {levels['pivot']:.2f}, R1: {levels['r1']:.2f}, S1: {levels['s1']:.2f}",
                 entry_condition, exit_condition
             ])
-
-            current_balance = f"Ending balance from day {i+1}"
 
         columns = [
             'Date', 'Day', 'Starting Balance', 'Direction', 'Contracts',
@@ -79,7 +76,7 @@ class IWMTradingPlan:
             return
 
         trade_day = self.trading_plan.iloc[day - 1]
-        contracts = max(1, int(trade_day['Starting Balance'] * 0.1 / 10))
+        contracts = trade_day['Contracts']
         price_diff = exit_price - entry_price
         gain_loss = price_diff * 100 * contracts
         ending_balance = trade_day['Starting Balance'] + gain_loss
@@ -110,34 +107,35 @@ class IWMTradingPlan:
         self.current_day = day
 
     def get_daily_plan(self, day=None):
-    if day is None:
-        day = self.current_day + 1
+        if day is None:
+            day = self.current_day + 1
 
-    if day < 1 or day > self.days:
-        print(f"Invalid day. Must be between 1 and {self.days}")
-        return None
+        if day < 1 or day > self.days:
+            print(f"Invalid day. Must be between 1 and {self.days}")
+            return None
 
-    return self.trading_plan.iloc[day - 1]
-    
+        # Return as dictionary for easier access in Streamlit
+        return self.trading_plan.iloc[day - 1].to_dict()
+        
     def update_daily_plan(self, starting_balance, market_condition, direction, 
-                  contracts, key_levels, entry_condition, exit_condition):
-    """Update today's trading plan with new values"""
-    day = self.current_day + 1
-    
-    if day < 1 or day > self.days:
-        print(f"Invalid day. Must be between 1 and {self.days}")
-        return
-    
-    # Update all editable fields
-    self.trading_plan.at[day - 1, 'Starting Balance'] = starting_balance
-    self.trading_plan.at[day - 1, 'Market Condition'] = market_condition
-    self.trading_plan.at[day - 1, 'Direction'] = direction
-    self.trading_plan.at[day - 1, 'Contracts'] = contracts
-    self.trading_plan.at[day - 1, 'Key Levels'] = key_levels
-    self.trading_plan.at[day - 1, 'Entry Condition'] = entry_condition
-    self.trading_plan.at[day - 1, 'Exit Condition'] = exit_condition
-    
-    print(f"Plan updated for Day {day}")
+                      contracts, key_levels, entry_condition, exit_condition):
+        """Update today's trading plan with new values"""
+        day = self.current_day + 1
+        
+        if day < 1 or day > self.days:
+            print(f"Invalid day. Must be between 1 and {self.days}")
+            return
+        
+        # Update all editable fields
+        self.trading_plan.at[day - 1, 'Starting Balance'] = starting_balance
+        self.trading_plan.at[day - 1, 'Market Condition'] = market_condition
+        self.trading_plan.at[day - 1, 'Direction'] = direction
+        self.trading_plan.at[day - 1, 'Contracts'] = contracts
+        self.trading_plan.at[day - 1, 'Key Levels'] = key_levels
+        self.trading_plan.at[day - 1, 'Entry Condition'] = entry_condition
+        self.trading_plan.at[day - 1, 'Exit Condition'] = exit_condition
+        
+        print(f"Plan updated for Day {day}")
 
     def get_market_analysis(self):
         ticker = yf.Ticker("IWM")
@@ -204,6 +202,3 @@ class IWMTradingPlan:
                                              'Entry Price', 'Exit Price', 'Gain/Loss']],
                 headers='keys', tablefmt='psql', showindex=False
             ))
-
-
-
