@@ -73,29 +73,31 @@ class IWMTradingPlan:
             'atr': (data['High'] - data['Low']).rolling(14).mean().iloc[-1]
         }
 
-    def record_trade(self, day, entry_price, exit_price):
-        if day < 1 or day > self.days:
-            print(f"Invalid day. Must be between 1 and {self.days}")
-            return
+    def record_trade(self, day, entry_price, exit_price, contracts):
+    if day < 1 or day > self.days:
+        print(f"Invalid day. Must be between 1 and {self.days}")
+        return
 
-        trade_day = self.trading_plan.iloc[day - 1]
-        contracts = max(1, int(trade_day['Starting Balance'] * 0.1 / 10))
-        price_diff = exit_price - entry_price
-        gain_loss = price_diff * 100 * contracts
-        ending_balance = trade_day['Starting Balance'] + gain_loss
+    trade_day = self.trading_plan.iloc[day - 1]
+    # Use provided contracts instead of calculating
+    # contracts = max(1, int(trade_day['Starting Balance'] * 0.1 / 10))
+    
+    price_diff = exit_price - entry_price
+    gain_loss = price_diff * 100 * contracts
+    ending_balance = trade_day['Starting Balance'] + gain_loss
 
-        trade_record = {
-            'Date': trade_day['Date'],
-            'Day': trade_day['Day'],
-            'Direction': trade_day['Direction'],
-            'Contracts': contracts,
-            'Entry Price': entry_price,
-            'Exit Price': exit_price,
-            'Gain/Loss': gain_loss,
-            'Ending Balance': ending_balance,
-            'Starting Balance': trade_day['Starting Balance']
-        }
-        self.trade_journal.append(trade_record)
+    trade_record = {
+        'Date': trade_day['Date'],
+        'Day': trade_day['Day'],
+        'Direction': trade_day['Direction'],
+        'Contracts': contracts,  # Use provided value
+        'Entry Price': entry_price,
+        'Exit Price': exit_price,
+        'Gain/Loss': gain_loss,
+        'Ending Balance': ending_balance,
+        'Starting Balance': trade_day['Starting Balance']
+    }
+    self.trade_journal.append(trade_record)
 
         self.trading_plan.at[day - 1, 'Entry Price'] = entry_price
         self.trading_plan.at[day - 1, 'Exit Price'] = exit_price
