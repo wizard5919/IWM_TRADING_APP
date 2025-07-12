@@ -1,9 +1,8 @@
-
-
 import streamlit as st
 from IWMTradingPlan import IWMTradingPlan
 import pandas as pd
 import matplotlib.pyplot as plt
+import re  # Import regex for string parsing
 
 st.set_page_config(page_title="IWM 0DTE Trading App", layout="centered")
 st.title("📈 IWM 0DTE Trading Plan & Tracker")
@@ -49,20 +48,45 @@ if page == "📅 Today's Plan":
             index=0 if day_plan['Direction'] == "CALL" else 1
         )
         
-        # Editable contracts
+        # Editable contracts - handle both int and string representations
+        try:
+            # Try to convert directly if it's an integer
+            contract_value = int(day_plan['Contracts'])
+        except:
+            # If it's a string formula, evaluate it
+            try:
+                contract_value = eval(day_plan['Contracts'])
+            except:
+                contract_value = 1
+                
         contracts = st.number_input(
             "**Contracts**", 
-            value=int(eval(day_plan['Contracts'])), 
+            value=contract_value, 
             min_value=1, 
             step=1
         )
     
     with col2:
-        # Editable key levels
+        # Editable key levels - handle parsing errors
         st.write("**Key Levels**")
-        levels = day_plan['Key Levels'].split(": ")[1]
-        pivot, r1, s1 = [float(x.split(" ")[1]) for x in levels.split(",")]
-        
+        try:
+            levels_str = day_plan['Key Levels']
+            # Extract numbers using regex
+            numbers = re.findall(r"[-+]?\d*\.\d+|\d+", levels_str)
+            if len(numbers) >= 3:
+                pivot = float(numbers[0])
+                r1 = float(numbers[1])
+                s1 = float(numbers[2])
+            else:
+                # Default values if parsing fails
+                pivot = 0.0
+                r1 = 0.0
+                s1 = 0.0
+        except:
+            pivot = 0.0
+            r1 = 0.0
+            s1 = 0.0
+            
         pivot = st.number_input("Pivot", value=pivot, step=0.01, format="%.2f")
         r1 = st.number_input("R1", value=r1, step=0.01, format="%.2f")
         s1 = st.number_input("S1", value=s1, step=0.01, format="%.2f")
@@ -70,16 +94,19 @@ if page == "📅 Today's Plan":
         # Save updated levels
         updated_levels = f"Pivot: {pivot:.2f}, R1: {r1:.2f}, S1: {s1:.2f}"
     
-    # Editable entry condition
+    # Editable entry condition - handle different formats
     entry_condition = day_plan['Entry Condition']
-    if ">" in entry_condition:
-        parts = entry_condition.split(">")
-        threshold1 = float(parts[1].split(" or ")[0].strip())
-        threshold2 = float(parts[2].strip())
-    else:
-        parts = entry_condition.split("<")
-        threshold1 = float(parts[1].split(" or ")[0].strip())
-        threshold2 = float(parts[2].strip())
+    threshold1 = 0.0
+    threshold2 = 0.0
+    
+    try:
+        # Try to extract numbers using regex
+        numbers = re.findall(r"[-+]?\d*\.\d+|\d+", entry_condition)
+        if len(numbers) >= 2:
+            threshold1 = float(numbers[0])
+            threshold2 = float(numbers[1])
+    except:
+        pass
     
     st.write("**Entry Condition**")
     col3, col4 = st.columns(2)
@@ -89,14 +116,23 @@ if page == "📅 Today's Plan":
         new_threshold2 = st.number_input("Threshold 2", value=threshold2, step=0.01, format="%.2f")
     
     if direction == "CALL":
-        updated_entry = f"Enter CALL if pre-market high > {new_threshold1} or opening range high > {new_threshold2}"
+        updated_entry = f"Enter CALL if pre-market high > {new_threshold1:.2f} or opening range high > {new_threshold2:.2f}"
     else:
-        updated_entry = f"Enter PUT if pre-market low < {new_threshold1} or opening range low < {new_threshold2}"
+        updated_entry = f"Enter PUT if pre-market low < {new_threshold1:.2f} or opening range low < {new_threshold2:.2f}"
     
-    # Editable exit condition
-    exit_parts = day_plan['Exit Condition'].split("%")
-    profit_target = int(exit_parts[0].split("at ")[1].strip())
-    stop_loss = int(exit_parts[1].split("%")[0].split("or ")[1].strip())
+    # Editable exit condition - handle different formats
+    exit_condition = day_plan['Exit Condition']
+    profit_target = 25
+    stop_loss = 20
+    
+    try:
+        # Try to extract numbers using regex
+        numbers = re.findall(r"\d+", exit_condition)
+        if len(numbers) >= 2:
+            profit_target = int(numbers[0])
+            stop_loss = int(numbers[1])
+    except:
+        pass
     
     st.write("**Exit Condition**")
     col5, col6 = st.columns(2)
@@ -169,4 +205,3 @@ elif page == "📊 Performance Summary":
         ax.set_title("Account Growth Over Time")
         ax.grid(True)
         st.pyplot(fig)
-
