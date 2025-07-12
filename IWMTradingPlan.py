@@ -1,0 +1,1 @@
+# Paste your full IWMTradingPlan class here (from your original script)

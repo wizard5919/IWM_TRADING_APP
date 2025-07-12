@@ -1,0 +1,6 @@
+streamlit
+yfinance
+pandas
+matplotlib
+pandas_market_calendars
+tabulate
