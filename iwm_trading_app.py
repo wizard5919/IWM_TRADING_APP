@@ -2,7 +2,7 @@ import streamlit as st
 from IWMTradingPlan import IWMTradingPlan
 import pandas as pd
 import matplotlib.pyplot as plt
-import re  # Import regex for string parsing
+import re
 
 st.set_page_config(page_title="IWM 0DTE Trading App", layout="centered")
 st.title("📈 IWM 0DTE Trading Plan & Tracker")
@@ -48,41 +48,27 @@ if page == "📅 Today's Plan":
             index=0 if day_plan['Direction'] == "CALL" else 1
         )
         
-        # Editable contracts - handle both int and string representations
-        try:
-            # Try to convert directly if it's an integer
-            contract_value = int(day_plan['Contracts'])
-        except:
-            # If it's a string formula, evaluate it
-            try:
-                contract_value = eval(day_plan['Contracts'])
-            except:
-                contract_value = 1
-                
+        # Editable contracts
         contracts = st.number_input(
             "**Contracts**", 
-            value=contract_value, 
+            value=int(day_plan['Contracts']), 
             min_value=1, 
             step=1
         )
     
     with col2:
-        # Editable key levels - handle parsing errors
+        # Editable key levels
         st.write("**Key Levels**")
-        try:
-            levels_str = day_plan['Key Levels']
-            # Extract numbers using regex
-            numbers = re.findall(r"[-+]?\d*\.\d+|\d+", levels_str)
-            if len(numbers) >= 3:
-                pivot = float(numbers[0])
-                r1 = float(numbers[1])
-                s1 = float(numbers[2])
-            else:
-                # Default values if parsing fails
-                pivot = 0.0
-                r1 = 0.0
-                s1 = 0.0
-        except:
+        # Parse the key levels string
+        levels_str = day_plan['Key Levels']
+        # Extract numbers using regex
+        numbers = re.findall(r"[-+]?\d*\.\d+|\d+", levels_str)
+        if len(numbers) >= 3:
+            pivot = float(numbers[0])
+            r1 = float(numbers[1])
+            s1 = float(numbers[2])
+        else:
+            # Default values if parsing fails
             pivot = 0.0
             r1 = 0.0
             s1 = 0.0
@@ -94,19 +80,16 @@ if page == "📅 Today's Plan":
         # Save updated levels
         updated_levels = f"Pivot: {pivot:.2f}, R1: {r1:.2f}, S1: {s1:.2f}"
     
-    # Editable entry condition - handle different formats
+    # Editable entry condition
     entry_condition = day_plan['Entry Condition']
-    threshold1 = 0.0
-    threshold2 = 0.0
-    
-    try:
-        # Try to extract numbers using regex
-        numbers = re.findall(r"[-+]?\d*\.\d+|\d+", entry_condition)
-        if len(numbers) >= 2:
-            threshold1 = float(numbers[0])
-            threshold2 = float(numbers[1])
-    except:
-        pass
+    # Extract numbers using regex
+    numbers = re.findall(r"[-+]?\d*\.\d+|\d+", entry_condition)
+    if len(numbers) >= 2:
+        threshold1 = float(numbers[0])
+        threshold2 = float(numbers[1])
+    else:
+        threshold1 = 0.0
+        threshold2 = 0.0
     
     st.write("**Entry Condition**")
     col3, col4 = st.columns(2)
@@ -120,19 +103,16 @@ if page == "📅 Today's Plan":
     else:
         updated_entry = f"Enter PUT if pre-market low < {new_threshold1:.2f} or opening range low < {new_threshold2:.2f}"
     
-    # Editable exit condition - handle different formats
+    # Editable exit condition
     exit_condition = day_plan['Exit Condition']
-    profit_target = 25
-    stop_loss = 20
-    
-    try:
-        # Try to extract numbers using regex
-        numbers = re.findall(r"\d+", exit_condition)
-        if len(numbers) >= 2:
-            profit_target = int(numbers[0])
-            stop_loss = int(numbers[1])
-    except:
-        pass
+    # Extract numbers (integers for percentages)
+    numbers = re.findall(r"\d+", exit_condition)
+    if len(numbers) >= 2:
+        profit_target = int(numbers[0])
+        stop_loss = int(numbers[1])
+    else:
+        profit_target = 25
+        stop_loss = 20
     
     st.write("**Exit Condition**")
     col5, col6 = st.columns(2)
@@ -193,11 +173,34 @@ elif page == "📊 Performance Summary":
     if not plan.trade_journal:
         st.warning("No trades recorded yet.")
     else:
-        st.session_state.plan.show_summary()
-
+        # Create a summary from trade journal
+        trades = pd.DataFrame(plan.trade_journal)
+        
+        # Calculate performance metrics
+        start_balance = trades.iloc[0]['Starting Balance']
+        current_balance = trades.iloc[-1]['Ending Balance']
+        total_gain = current_balance - start_balance
+        growth_percent = (total_gain / start_balance) * 100
+        
+        wins = sum(trades['Gain/Loss'] > 0)
+        losses = sum(trades['Gain/Loss'] < 0)
+        win_rate = (wins / len(trades)) * 100
+        
+        # Display summary
+        st.subheader("Performance Metrics")
+        st.write(f"**Starting Balance:** ${start_balance:.2f}")
+        st.write(f"**Current Balance:** ${current_balance:.2f}")
+        st.write(f"**Total Gain/Loss:** ${total_gain:.2f} ({growth_percent:.2f}%)")
+        st.write(f"**Trades Completed:** {len(trades)}")
+        st.write(f"**Win Rate:** {win_rate:.2f}% ({wins} wins, {losses} losses)")
+        
+        # Display recent trades
+        st.subheader("Recent Trades")
+        st.dataframe(trades.tail(5)[['Date', 'Day', 'Direction', 'Contracts', 
+                                    'Entry Price', 'Exit Price', 'Gain/Loss', 'Ending Balance']])
+        
         # Plot balance curve
         st.subheader("💰 Balance Curve")
-        trades = pd.DataFrame(plan.trade_journal)
         fig, ax = plt.subplots()
         ax.plot(trades["Day"], trades["Ending Balance"], marker='o')
         ax.set_xlabel("Day")
