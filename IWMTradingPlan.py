@@ -118,6 +118,26 @@ class IWMTradingPlan:
             return None
 
         return self.trading_plan.iloc[day - 1]
+        
+    def update_daily_plan(self, starting_balance, market_condition, direction, 
+                      contracts, key_levels, entry_condition, exit_condition):
+    """Update today's trading plan with new values"""
+    day = self.current_day + 1
+    
+    if day < 1 or day > self.days:
+        print(f"Invalid day. Must be between 1 and {self.days}")
+        return
+    
+    # Update all editable fields
+    self.trading_plan.at[day - 1, 'Starting Balance'] = starting_balance
+    self.trading_plan.at[day - 1, 'Market Condition'] = market_condition
+    self.trading_plan.at[day - 1, 'Direction'] = direction
+    self.trading_plan.at[day - 1, 'Contracts'] = contracts
+    self.trading_plan.at[day - 1, 'Key Levels'] = key_levels
+    self.trading_plan.at[day - 1, 'Entry Condition'] = entry_condition
+    self.trading_plan.at[day - 1, 'Exit Condition'] = exit_condition
+    
+    print(f"Plan updated for Day {day}")
 
     def get_market_analysis(self):
         ticker = yf.Ticker("IWM")
