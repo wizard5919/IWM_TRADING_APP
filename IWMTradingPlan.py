@@ -27,7 +27,7 @@ class IWMTradingPlan:
         current_balance = self.start_balance
 
         for i, date in enumerate(trading_days):
-            contracts = max(1, int(current_balance * 0.1 / 10))
+            contracts = f"max(1, int({current_balance} * 0.1 / 10))"
             condition = "Bullish" if levels['prev_close'] > levels['50ma'] else "Bearish"
 
             if condition == "Bullish":
