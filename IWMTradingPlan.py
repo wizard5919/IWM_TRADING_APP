@@ -110,17 +110,17 @@ class IWMTradingPlan:
         self.current_day = day
 
     def get_daily_plan(self, day=None):
-        if day is None:
-            day = self.current_day + 1
+    if day is None:
+        day = self.current_day + 1
 
-        if day < 1 or day > self.days:
-            print(f"Invalid day. Must be between 1 and {self.days}")
-            return None
+    if day < 1 or day > self.days:
+        print(f"Invalid day. Must be between 1 and {self.days}")
+        return None
 
-        return self.trading_plan.iloc[day - 1]
-        
+    return self.trading_plan.iloc[day - 1]
+    
     def update_daily_plan(self, starting_balance, market_condition, direction, 
-                      contracts, key_levels, entry_condition, exit_condition):
+                  contracts, key_levels, entry_condition, exit_condition):
     """Update today's trading plan with new values"""
     day = self.current_day + 1
     
