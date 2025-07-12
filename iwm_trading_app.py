@@ -43,9 +43,11 @@ elif page == "🧮 Record a Trade":
     trade_day = st.number_input("Enter Day # (1 - 100)", min_value=1, max_value=100, step=1)
     entry_price = st.number_input("Entry Price", format="%.2f")
     exit_price = st.number_input("Exit Price", format="%.2f")
+    # Add contract number input
+    contracts = st.number_input("Number of Contracts", min_value=1, step=1, value=1)
 
     if st.button("💾 Record Trade"):
-        plan.record_trade(trade_day, entry_price, exit_price)
+        plan.record_trade(trade_day, entry_price, exit_price, contracts)  # Pass contracts
 
 elif page == "📊 Performance Summary":
     st.header("📊 Performance Summary")
