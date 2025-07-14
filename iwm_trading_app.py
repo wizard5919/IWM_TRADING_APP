@@ -27,7 +27,7 @@ class IWMTradingPlan:
     DEFAULT_DAYS = 100
     CONTRACT_SIZE = 100
     RISK_PERCENTAGE = 0.1
-    MAX_DAILY_LOSS = 0.05  # 5% max daily loss
+    MAX_DAILY_LOSS = 0.05
     MIN_CONTRACTS = 1
     MAX_CONTRACTS = 100
 
